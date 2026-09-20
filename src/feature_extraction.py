@@ -174,3 +174,181 @@ def suspicious_url_characters(url):
     suspicious = re.findall(r"[@?=&%]", url)
 
     return -1 if len(suspicious) >= 3 else 1
+
+
+UCI_FEATURES = [
+    "having_IP_Address",
+    "URL_Length",
+    "Shortining_Service",
+    "having_At_Symbol",
+    "double_slash_redirecting",
+    "Prefix_Suffix",
+    "having_Sub_Domain",
+    "SSLfinal_State",
+    "Domain_registration_length",
+    "Favicon",
+    "port",
+    "HTTPS_token",
+    "Request_URL",
+    "URL_of_Anchor",
+    "Links_in_tags",
+    "SFH",
+    "Submitting_to_email",
+    "Abnormal_URL",
+    "Redirect",
+    "on_mouseover",
+    "RightClick",
+    "popUpWindow",
+    "Iframe",
+    "age_of_domain",
+    "DNSRecord",
+    "web_traffic",
+    "Page_Rank",
+    "Google_Index",
+    "Links_pointing_to_page",
+    "Statistical_report"
+]
+
+URL_ONLY_FEATURES = [
+    "having_IP_Address",
+    "URL_Length",
+    "Shortining_Service",
+    "having_At_Symbol",
+    "double_slash_redirecting",
+    "Prefix_Suffix",
+    "having_Sub_Domain",
+    "HTTPS_token"
+]
+
+
+WEBPAGE_FEATURES = [
+    "Favicon",
+    "Request_URL",
+    "URL_of_Anchor",
+    "Links_in_tags",
+    "SFH",
+    "Submitting_to_email",
+    "Abnormal_URL",
+    "Redirect",
+    "on_mouseover",
+    "RightClick",
+    "popUpWindow",
+    "Iframe"
+]
+
+
+DOMAIN_FEATURES = [
+    "SSLfinal_State",
+    "Domain_registration_length",
+    "port",
+    "age_of_domain",
+    "DNSRecord",
+    "web_traffic",
+    "Page_Rank",
+    "Google_Index",
+    "Links_pointing_to_page",
+    "Statistical_report"
+]
+
+all_grouped_features = (
+    URL_ONLY_FEATURES
+    + WEBPAGE_FEATURES
+    + DOMAIN_FEATURES
+)
+
+print("Total grouped features:", len(all_grouped_features))
+
+missing_features = set(UCI_FEATURES) - set(all_grouped_features)
+
+print("Missing features:", missing_features)
+
+from webpage_analysis import (
+    fetch_webpage,
+    parse_webpage,
+    has_favicon,
+    request_url_feature,
+    url_of_anchor_feature,
+    links_in_tags_feature,
+    sfh_feature,
+    submitting_to_email_feature,
+    abnormal_url_feature,
+    on_mouseover_feature,
+    right_click_feature,
+    popup_window_feature,
+    iframe_feature
+)
+
+from domain_analysis import (
+    dns_record_feature,
+    port_feature,
+    domain_registration_length,
+    age_of_domain
+)
+
+def extract_all_features(url):
+    """
+    Extract all currently supported features
+    from a URL, webpage HTML, and domain information.
+    """
+
+    features = {}
+
+    # URL features
+    features.update(extract_basic_features(url))
+
+    # Domain features
+    features["Domain_registration_length"] = (
+        domain_registration_length(url)
+    )
+
+    features["port"] = port_feature(url)
+
+    features["age_of_domain"] = age_of_domain(url)
+
+    features["DNSRecord"] = dns_record_feature(url)
+
+    # Webpage features
+    html, final_url = fetch_webpage(url)
+
+    soup = parse_webpage(html)
+
+    features["Favicon"] = has_favicon(soup)
+
+    features["Request_URL"] = request_url_feature(
+        soup,
+        final_url
+    )
+
+    features["URL_of_Anchor"] = url_of_anchor_feature(
+        soup,
+        final_url
+    )
+
+    features["Links_in_tags"] = links_in_tags_feature(
+        soup,
+        final_url
+    )
+
+    features["SFH"] = sfh_feature(
+        soup,
+        final_url
+    )
+
+    features["Submitting_to_email"] = (
+        submitting_to_email_feature(soup)
+    )
+
+    features["Abnormal_URL"] = abnormal_url_feature(
+        soup,
+        final_url
+    )
+
+    features["on_mouseover"] = on_mouseover_feature(soup)
+
+    features["RightClick"] = right_click_feature(soup)
+
+    features["popUpWindow"] = popup_window_feature(soup)
+
+    features["Iframe"] = iframe_feature(soup)
+
+    return features
